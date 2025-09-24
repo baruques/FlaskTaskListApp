@@ -1,6 +1,6 @@
-from task import task
 from task.task import Task
 from typing import Dict
+
 
 def read_tasks(filepath: str) -> Dict[str, Task]:
     tasks = {}
@@ -8,38 +8,48 @@ def read_tasks(filepath: str) -> Dict[str, Task]:
     try:
         with open(filepath, "r") as file:
             for line in file:
-                uuid, description, priority, completed = line.strip().split(";")
+                uuid, priority, description, completed = line.strip().split(";")
 
-                completed = completed.strip().lower() == "true"
-                new_task = Task(
+                completed = completed.strip() == "True"
+                task = Task(
                     description=description.strip(),
                     priority=int(priority.strip()),
                     completed=completed,
-                    uuid=uuid.strip(),
+                    uuid=uuid,
                 )
-                tasks[task.uuid.hex] = new_task
+                tasks[task.uuid.hex] = task
     except FileNotFoundError:
-        print("File not found. Want to input a new file path? (y/n):")
-        user_input = input().strip().lower()
-        if user_input == "y":
-            new_path = input("Enter new file path: ").strip()
-            return read_tasks(new_path)
+        print(f"🚨 File not found: {filepath}")
+        response = input("Wanna type another path? (y/n):").strip()
+        if response == "y":
+            filepath = input("Which?:").strip()
+            return read_tasks(filepath)
         raise FileNotFoundError()
+
     except Exception as e:
-        print(f"Error reading tasks from {filepath}: {e}")
-        answer = input("Wanna try again? (y/n): ").strip().lower()
-        if answer == "y":
+        print(f"🚨 Failed to read file: {e}")
+        response = input("Wanna try again? (y/n):").strip()
+        if response == "y":
             return read_tasks(filepath)
     else:
-        print("Loaded no tasks.")
+        print(">>>✅ Tasks loaded successfully.<<<")
         return tasks
-    
-def write_tasks(filepath: str, tasks: Dict[str, Task]) -> None:
+
+
+def save_tasks_on_file(filepath: str, tasks: Dict[str, Task]):
+    print("dados:", len(tasks.values()))
     try:
         with open(filepath, "w") as file:
             for task in tasks.values():
-                line = f"{task.id}; {task.priority}; {task.description}; {task.completed}\n"
-                file.write(line)
+                priority = task.priority
+                description = task.description
+                completed = task.completed
+                uuid = task.uuid.hex
+
+                file.write(f"{uuid}; {priority}; {description}; {completed}\n")
+                print(f"Task saved successfully: {uuid}!")
     except Exception as e:
-        print(f"Error writing tasks to {filepath}: {e}")
-        raise e
+        print(f"🚨 Failed to write on file: {e}")
+        response = input("Wanna try again? (y/n):").strip()
+        if response == "y":
+            save_tasks_on_file(filepath, tasks)
