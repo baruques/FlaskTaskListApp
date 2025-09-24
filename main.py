@@ -1,16 +1,15 @@
 from flask import Flask, json, render_template, request
-from task import Task
-
+from task.task import Task
+from database.db import read_tasks
 app = Flask(__name__)
-tasks = ...
+tasks = read_tasks("")
 
-@app.post("/")
+@app.post("/task")
 def add_task():
     data = json.loads(request.data)
-    task = data.get("task")
-    priority = data.get("priority", 0)
-    new_task = Task(description=task, priority=priority)
-    return f"Task added: {new_task}"
+    new_task = Task(data["description"], data["priority"], False)
+    tasks.append(new_task)
+    return f"Task added: {new_task.description}"
 
 @app.get("/")
 def index():
